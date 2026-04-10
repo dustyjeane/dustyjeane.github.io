@@ -68,6 +68,11 @@ input, .button {
   left: 0;
 }
 
+#img2 {
+  height: 0;
+  display: none;
+}
+
 /* text pages sit inside viewport, above images */
 .pages {
   position: absolute;
@@ -284,13 +289,9 @@ $(function(){
       if(i < totalPages){
         i++;
         togglePosition();
-        // Grow body to allow scrolling to next page
         $("html,body").height($("html,body").height() + vpH);
-      } else {
-        // Hard stop at last page
-        $(window).off("scroll");
-        $("html,body").animate({"scrollTop": vpH * totalPages}, 100);
       }
+      // no hard stop — just let scroll reach natural end of body
     }
 
     // --- Scroll back ---
@@ -318,7 +319,7 @@ $(function(){
     if($("img:visible").height() <= 0){
       var incoming = (imgt % 2 == 0) ? 1 : 0;
       $("img").hide();
-      $("img").eq(incoming).css("height", "0px").show();
+      $("img").eq(incoming).height(0).css({"top":"auto","bottom":"0"}).show();
       imgt++;
     }
 
