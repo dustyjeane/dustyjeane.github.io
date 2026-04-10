@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dusty jeane</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: normal;
+  background: hsl(0,0%,5%);
+  color: white;
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+}
+
+a {
+  color: white;
+  text-decoration: none;
+}
+
+input, .button {
+  background: none;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  text-transform: lowercase;
+  font-weight: normal;
+  border: 0;
+  color: white;
+  outline: 0;
+  letter-spacing: 0.1em;
+}
+
+.button {
+  cursor: pointer;
+  opacity: 0.35;
+  transition: opacity 0.3s;
+}
+
+.button:hover {
+  opacity: 0.7;
+}
+
+.viewport {
+  position: fixed;
+  width: 100%;
+  height: 100vh;
+  z-index: 3;
+  overflow: hidden;
+}
+
+.viewport img {
+  z-index: 3;
+  background: black;
+  position: absolute;
+  width: 100%;
+  height: 100vh;
+  max-height: 100vh;
+  max-width: 100vw;
+  object-fit: cover;
+  object-position: center top;
+  top: 0;
+  left: 0;
+}
+
+/* text pages sit inside viewport, above images */
+.pages {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.page {
+  display: none;
+  width: 100%;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.page.a {
+  display: block;
+}
+
+/* re-enable pointer events only on interactive elements */
+.page.a input,
+.page.a .button {
+  pointer-events: all;
+}
+
+.centered {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+p, li, input {
+  line-height: 75px;
+  text-align: center;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: lowercase;
+}
+
+/* Page 1 — name, barely visible */
+.name-text {
+  opacity: 0.1;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: lowercase;
+  line-height: 1;
+}
+
+/* Page 2 — email */
+#mc_embed_signup input.email {
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  width: 200px;
+  text-align: center;
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+
+#mc_embed_signup input.email:focus {
+  opacity: 0.9;
+}
+
+#mc_embed_signup input.email::placeholder {
+  color: rgba(255,255,255,0.4);
+  text-transform: lowercase;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+
+/* Page 3 — asterism */
+.asterism {
+  font-size: 28px;
+  opacity: 0.55;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+/* scroll track — tall enough for 3 pages + buffer */
+.scroll-track {
+  height: 400vh;
+}
+</style>
+</head>
+<body>
+
+<div class="viewport">
+  <img src="img1.jpg" id="img1">
+  <img src="img2.jpg" id="img2" style="display:none;">
+
+  <div class="pages">
+
+    <!-- Page 1: name -->
+    <div class="page a">
+      <div class="centered">
+        <p class="name-text">dusty jeane</p>
+      </div>
+    </div>
+
+    <!-- Page 2: email -->
+    <div class="page">
+      <div class="centered">
+        <div id="mc_embed_signup">
+          <div id="mc_embed_signup_scroll">
+            <div class="mc-field-group">
+              <input type="email" name="EMAIL" class="email" placeholder="email address" aria-required="true">
+              &nbsp;
+              <span class="button" onclick="this.parentElement.querySelector('.email').value=''">yes</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page 3: asterism -->
+    <div class="page">
+      <div class="centered">
+        <p class="asterism">✱</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="scroll-track"></div>
+
+<script>
+(function() {
+  var totalPages = 3;
+
+  var imgs = [
+    document.getElementById('img1'),
+    document.getElementById('img2')
+  ];
+  var pages = document.querySelectorAll('.page');
+
+  function vh() { return window.innerHeight; }
+
+  function showPage(index) {
+    pages.forEach(function(p) { p.classList.remove('a'); });
+    if (pages[index]) pages[index].classList.add('a');
+  }
+
+  function update() {
+    var cur = window.scrollY || window.pageYOffset;
+    var viewH = vh();
+
+    // Which segment are we in? (0-indexed)
+    // Each segment is one viewH tall
+    var seg = Math.floor(cur / viewH); // 0, 1, 2, ...
+    seg = Math.min(seg, totalPages - 1);
+
+    // Position within current segment (0..1)
+    var progress = (cur % viewH) / viewH;
+
+    // Even segments: image shrinks from top downward (top-anchored, height = viewH - offset)
+    // Odd segments:  image grows from bottom upward (bottom-anchored, height = offset)
+    var imgHeight, anchor;
+    if (seg % 2 === 0) {
+      // top anchor, shrinks as you scroll into it
+      imgHeight = viewH - (cur - seg * viewH);
+      anchor = 'top';
+    } else {
+      // bottom anchor, grows as you scroll into it
+      imgHeight = cur - seg * viewH;
+      anchor = 'bottom';
+    }
+
+    imgHeight = Math.max(0, Math.min(imgHeight, viewH));
+
+    // Which image shows on which segment
+    var activeImg = seg % 2; // seg 0 → img1, seg 1 → img2, seg 2 → img1...
+    imgs[activeImg].style.display = 'block';
+    imgs[1 - activeImg].style.display = 'none';
+
+    imgs[activeImg].style.height = imgHeight + 'px';
+    if (anchor === 'top') {
+      imgs[activeImg].style.top = '0';
+      imgs[activeImg].style.bottom = 'auto';
+    } else {
+      imgs[activeImg].style.top = 'auto';
+      imgs[activeImg].style.bottom = '0';
+    }
+
+    // Show the text page that corresponds to the current segment
+    // Only reveal text when image is near full height (settled)
+    if (imgHeight >= viewH - 2) {
+      showPage(seg);
+    }
+
+    // Hard stop at last page
+    if (cur >= viewH * totalPages) {
+      window.scrollTo(0, viewH * totalPages - 1);
+    }
+  }
+
+  window.addEventListener('scroll', update);
+
+  // Click at top starts scroll
+  window.addEventListener('click', function() {
+    if ((window.scrollY || window.pageYOffset) === 0) {
+      window.scrollTo({ top: vh(), behavior: 'smooth' });
+    }
+  });
+
+  // Init
+  imgs[0].style.display = 'block';
+  imgs[0].style.height = vh() + 'px';
+  imgs[0].style.top = '0';
+  imgs[0].style.bottom = 'auto';
+  imgs[1].style.display = 'none';
+  showPage(0);
+})();
+</script>
+
+</body>
+</html>
